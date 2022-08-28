@@ -1,0 +1,54 @@
+-- Create table about the people and what they do here
+
+CREATE TABLE People (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fullname TEXT,
+    age INTEGER,
+    seasons integer);
+    
+    INSERT INTO People (fullname, age, seasons)
+    VALUES ("Andrea", 28, 6);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Lindsay", 36, 5);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Kyle", 33, 8);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Amanda", 30, 4);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Carl", 34, 10);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Danielle", 34, 1);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Paige", 28, 9);
+INSERT INTO People (fullname, age, seasons)
+    VALUES ("Ciara", 28, 4);
+
+    
+CREATE TABLE hobbies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    People_id integer,
+    hobby_name TEXT,
+    years_practiced INTEGER);
+    
+  INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("cooking", 4);  
+   INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("drinking", 14);
+    INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("running", 10);  
+   INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("social media", 6);
+INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("running", 10);  
+   INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("planning", 10);
+    INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("styling", 9);  
+   INSERT INTO hobbies (hobby_name, years_practiced)
+    VALUES ("nursing", 8);
+
+
+select people.fullname, hobbies.hobby_name
+from People
+join hobbies
+on people.id = hobbies.people_id;
