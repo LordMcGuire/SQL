@@ -1,0 +1,39 @@
+## Create a coffee shop database ##
+
+CREATE TABLE Starbucks (id INTEGER PRIMARY KEY, item TEXT, orders_per_day INTEGER, price INTEGER, served TEXT);
+
+INSERT INTO Starbucks VALUES (1, "Dark Roast", 10, 2.99, "both");
+INSERT INTO Starbucks VALUES (2, "Pike Place", 30, 3.99, "both");
+INSERT INTO Starbucks VALUES (3, "Americano", 3, 6.00, "hot");
+INSERT INTO Starbucks VALUES (4, "Capacino", 10, 2.99, "hot");
+INSERT INTO Starbucks VALUES (5, "Vanilla Cold Brew", 14, 3.99, "cold");
+INSERT INTO Starbucks VALUES (6, "Salted Caramel Hot Chocolate", 5, 6.99, "hot");
+INSERT INTO Starbucks VALUES (7, "Colombian", 10, 2.76, "hot");
+INSERT INTO Starbucks VALUES (8, "Hot Cocoa", 13, 3.00, "hot");
+INSERT INTO Starbucks VALUES (9, "Iced Tea", 3, 3.75, "cold");
+INSERT INTO Starbucks VALUES (10, "Strawberry Frappe", 10, 2.99, "cold");
+INSERT INTO Starbucks VALUES (11, "Cocoa Frappe", 5, 3.99, "cold");
+INSERT INTO Starbucks VALUES (12, "Iced Americano", 3, 4.75, "cold");
+INSERT INTO Starbucks VALUES (13, "Salted Dark Roast", 7, 4.50, "hot");
+INSERT INTO Starbucks VALUES (14, "Roasted Caramel Frappe", 25, 2.99, "cold");
+INSERT INTO Starbucks VALUES (15, "Cinnamon Swirl", 3, 3.27, "both");
+INSERT INTO Starbucks VALUES (16, "Dragon Fruit Refresher", 10, 5.50, "cold");
+
+## Display the database ordered by price ## 
+
+SELECT * 
+FROM Starbucks 
+ORDER BY cost DESC;
+
+## What is the average price of items served hot? ##
+
+SELECT AVG(price) AS AVG_Hot_Drink_Price
+FROM Starbucks
+WHERE served = 'hot"; 
+
+## What are the 5 most ordered drinks per day? ##
+
+SELECT item, price, orders_per_day
+FROM Starbucks
+ORDER BY orders_per_day DESC
+LIMIT 5; 
