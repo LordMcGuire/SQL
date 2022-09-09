@@ -1,0 +1,95 @@
+-- Query the sport and distinct number of athletes
+SELECT 
+	sport, 
+    COUNT(distinct athlete_id) AS athletes
+FROM summer_games
+GROUP BY sport
+-- Only include the 3 sports with the most athletes
+ORDER BY athletes
+LIMIT 3;
+
+-- Query sport, events, and athletes from summer_games
+SELECT 
+	sport, 
+    COUNT(distinct event) AS events, 
+    COUNT(distinct athlete_id) AS athletes
+FROM summer_games
+GROUP BY sport;
+
+-- Select the age of the oldest athlete for each region
+SELECT 
+	region, 
+    MAX(age) AS age_of_oldest_athlete
+FROM athletes
+-- First JOIN statement
+JOIN summer_games 
+ON athletes.id = summer_games.athlete_id
+-- Second JOIN statement
+JOIN countries
+ON summer_games.country_id = countries.id 
+GROUP BY region;
+
+-- Select sport and events for summer sports
+SELECT 
+	sport, 
+    COUNT(DISTINCT event) AS events
+FROM summer_games
+GROUP BY sport
+UNION
+-- Select sport and events for winter sports
+SELECT 
+	sport, 
+    COUNT(DISTINCT event) AS events
+FROM winter_games
+GROUP BY sport
+-- Show the most events at the top of the report
+ORDER BY events DESC;
+
+-- Select the total bronze_medals from your query
+SELECT SUM(bronze_medals)
+FROM 
+-- Previous query is shown below.  Alias this AS subquery.
+  (SELECT 
+      country, 
+      SUM(bronze) AS bronze_medals
+  FROM summer_games AS s
+  JOIN countries AS c
+  ON s.country_id = c.id
+  GROUP BY country) AS subquery
+;
+
+-- Pull athlete_name and gold_medals for summer games
+SELECT 
+	a.name AS athlete_name, 
+    SUM(gold) AS gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+GROUP BY a.name
+-- Filter for only athletes with 3 gold medals or more
+HAVING SUM(gold) > 2
+-- Sort to show the most gold medals at the top
+ORDER BY gold_medals DESC;
+
+-- Query season, country, and events for all summer events
+SELECT 
+	'summer' AS season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM summer_games AS s
+JOIN countries AS c
+ON s.country_id = c.id
+GROUP BY country
+-- Combine the queries
+UNION ALL
+-- Query season, country, and events for all winter events
+SELECT 
+	'winter' AS season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+GROUP BY country
+-- Sort the results to show most events at the top
+ORDER BY events DESC;
