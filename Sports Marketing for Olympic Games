@@ -8,6 +8,8 @@ GROUP BY sport
 ORDER BY athletes
 LIMIT 3;
 
+
+
 -- Query sport, events, and athletes from summer_games
 SELECT 
 	sport, 
@@ -15,6 +17,8 @@ SELECT
     COUNT(distinct athlete_id) AS athletes
 FROM summer_games
 GROUP BY sport;
+
+
 
 -- Select the age of the oldest athlete for each region
 SELECT 
@@ -28,6 +32,8 @@ ON athletes.id = summer_games.athlete_id
 JOIN countries
 ON summer_games.country_id = countries.id 
 GROUP BY region;
+
+
 
 -- Select sport and events for summer sports
 SELECT 
@@ -45,6 +51,8 @@ GROUP BY sport
 -- Show the most events at the top of the report
 ORDER BY events DESC;
 
+
+
 -- Select the total bronze_medals from your query
 SELECT SUM(bronze_medals)
 FROM 
@@ -55,8 +63,9 @@ FROM
   FROM summer_games AS s
   JOIN countries AS c
   ON s.country_id = c.id
-  GROUP BY country) AS subquery
-;
+  GROUP BY country) AS subquery;
+
+
 
 -- Pull athlete_name and gold_medals for summer games
 SELECT 
@@ -70,6 +79,8 @@ GROUP BY a.name
 HAVING SUM(gold) > 2
 -- Sort to show the most gold medals at the top
 ORDER BY gold_medals DESC;
+
+
 
 -- Query season, country, and events for all summer events
 SELECT 
@@ -93,3 +104,89 @@ ON w.country_id = c.id
 GROUP BY country
 -- Sort the results to show most events at the top
 ORDER BY events DESC;
+
+
+
+-- Pull summer bronze_medals, silver_medals, and gold_medals
+SELECT 
+	SUM(bronze) AS bronze_medals, 
+    SUM(silver) AS silver_medals, 
+    SUM(gold) AS gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+-- Filter for athletes age 16 or below
+WHERE age <= 16;
+
+
+-- Pull in sport, bmi_bucket, and athletes
+SELECT 
+	sport,
+    -- Bucket BMI in three groups: <.25, .25-.30, and >.30	
+    CASE WHEN 100*weight/height^2 <.25 THEN '<.25'
+    WHEN 100*weight/height^2 <=.30 THEN '.25-.30'
+    WHEN 100*weight/height^2 >.30 THEN '>.30' END AS bmi_bucket,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+-- GROUP BY non-aggregated fields
+GROUP BY sport, bmi_bucket
+-- Sort by sport and then by athletes in descending order
+ORDER BY sport, athletes DESC;
+
+
+
+-- Pull event and unique athletes from summer_games 
+SELECT 
+    event,
+    -- Add the gender field below
+    CASE WHEN event LIKE '%Women%' THEN 'female' 
+    ELSE 'male' END AS gender,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games
+-- Only include countries that won a nobel prize
+WHERE country_id IN 
+	(SELECT country_id 
+    FROM country_stats 
+    WHERE nobel_prize_winners > 0)
+GROUP BY event
+-- Add the second query below and combine with a UNION
+UNION
+SELECT 
+    event,
+    CASE WHEN event LIKE '%Women%' THEN 'female' 
+    ELSE 'male' END AS gender,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM winter_games
+WHERE country_id IN 
+	(SELECT country_id 
+    FROM country_stats 
+    WHERE nobel_prize_winners > 0)
+GROUP BY event
+-- Order and limit the final output
+ORDER BY athletes DESC
+LIMIT 10;
+
+
+
+SELECT 
+-- Clean the country field to only show country_code
+    LEFT(REPLACE(UPPER(TRIM(c.country)), '.', ''), 3) AS country_code,
+-- Pull in pop_in_millions and medals_per_million 
+	pop_in_millions,
+-- Add the three medal fields using one sum function
+	SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0)) AS medals,
+	SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0)) / CAST(cs.pop_in_millions AS float) AS medals_per_million
+FROM summer_games AS s
+JOIN countries AS c 
+ON s.country_id = c.id
+-- Update the newest join statement to remove duplication
+JOIN country_stats AS cs 
+ON s.country_id = cs.country_id AND s.year = CAST(cs.year AS date)
+-- Filter out null populations
+WHERE cs.pop_in_millions IS NOT NULL
+GROUP BY c.country, pop_in_millions
+-- Keep only the top 25 medals_per_million rows
+ORDER BY medals_per_million DESC
+LIMIT 25;
