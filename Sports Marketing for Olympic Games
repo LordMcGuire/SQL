@@ -9,7 +9,6 @@ ORDER BY athletes
 LIMIT 3;
 
 
-
 -- Query sport, events, and athletes from summer_games
 SELECT 
 	sport, 
@@ -17,7 +16,6 @@ SELECT
     COUNT(distinct athlete_id) AS athletes
 FROM summer_games
 GROUP BY sport;
-
 
 
 -- Select the age of the oldest athlete for each region
@@ -32,7 +30,6 @@ ON athletes.id = summer_games.athlete_id
 JOIN countries
 ON summer_games.country_id = countries.id 
 GROUP BY region;
-
 
 
 -- Select sport and events for summer sports
@@ -52,6 +49,10 @@ GROUP BY sport
 ORDER BY events DESC;
 
 
+Pull total_bronze_medals from summer_games below
+SELECT SUM(bronze) AS total_bronze_medals
+FROM summer_games; 
+>> OUTPUT = 141 total_bronze_medals;
 
 -- Select the total bronze_medals from your query
 SELECT SUM(bronze_medals)
@@ -66,7 +67,6 @@ FROM
   GROUP BY country) AS subquery;
 
 
-
 -- Pull athlete_name and gold_medals for summer games
 SELECT 
 	a.name AS athlete_name, 
@@ -79,7 +79,6 @@ GROUP BY a.name
 HAVING SUM(gold) > 2
 -- Sort to show the most gold medals at the top
 ORDER BY gold_medals DESC;
-
 
 
 -- Query season, country, and events for all summer events
@@ -106,6 +105,40 @@ GROUP BY country
 ORDER BY events DESC;
 
 
+-- Add outer layer to pull season, country and unique events
+SELECT 
+	season, 
+    country, 
+    COUNT(DISTINCT event) AS events
+FROM
+    -- Pull season, country_id, and event for both seasons
+    (SELECT 
+     	'summer' AS season, 
+     	country_id, 
+     	event
+    FROM summer_games
+    UNION ALL
+    SELECT 
+     	'winter' AS season, 
+     	country_id, 
+     	event
+    FROM winter_games) AS subquery
+JOIN countries AS c
+ON subquery.country_id = c.id
+-- Group by any unaggregated fields
+GROUP BY season, country
+-- Order to show most events at the top
+ORDER BY events DESC;
+
+
+SELECT 
+	name,
+    -- Output 'Tall Female', 'Tall Male', or 'Other'
+	CASE WHEN gender = 'F' AND height >= 175 THEN 'Tall Female'
+    WHEN gender = 'M' AND height >= 190 THEN 'Tall Male'
+    ELSE 'Other' END AS segment
+FROM athletes;
+
 
 -- Pull summer bronze_medals, silver_medals, and gold_medals
 SELECT 
@@ -117,24 +150,6 @@ JOIN athletes AS a
 ON s.athlete_id = a.id
 -- Filter for athletes age 16 or below
 WHERE age <= 16;
-
-
--- Pull in sport, bmi_bucket, and athletes
-SELECT 
-	sport,
-    -- Bucket BMI in three groups: <.25, .25-.30, and >.30	
-    CASE WHEN 100*weight/height^2 <.25 THEN '<.25'
-    WHEN 100*weight/height^2 <=.30 THEN '.25-.30'
-    WHEN 100*weight/height^2 >.30 THEN '>.30' END AS bmi_bucket,
-    COUNT(DISTINCT athlete_id) AS athletes
-FROM summer_games AS s
-JOIN athletes AS a
-ON s.athlete_id = a.id
--- GROUP BY non-aggregated fields
-GROUP BY sport, bmi_bucket
--- Sort by sport and then by athletes in descending order
-ORDER BY sport, athletes DESC;
-
 
 
 -- Pull event and unique athletes from summer_games 
@@ -169,13 +184,70 @@ ORDER BY athletes DESC
 LIMIT 10;
 
 
+-- Pull column_name & data_type from the columns table
+SELECT 
+	column_name, 
+    data_type
+FROM information_schema.columns
+-- Filter for the table 'country_stats'
+WHERE table_name = 'country_stats';
+
 
 SELECT 
--- Clean the country field to only show country_code
+	year,
+    -- Pull decade, decade_truncate, and the world's gdp
+    DATE_PART('decade',CAST(year AS date)) AS decade,
+    DATE_TRUNC('decade',CAST(year AS date)) AS decade_truncated,
+    SUM(gdp) AS world_gdp
+FROM country_stats
+-- Group and order by year in descending order
+GROUP BY year
+ORDER BY year DESC;
+
+
+SELECT 
+	region, 
+    -- Replace all '&' characters with the string 'and'
+    REPLACE(region, '&', 'and') AS character_swap,
+    -- Remove all periods
+    REPLACE(region,'.','') AS character_remove
+FROM countries
+WHERE region = 'LATIN AMER. & CARIB'
+GROUP BY region;
+
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id, 
+    -- Replace all null gold values with 0
+    AVG(COALESCE(gold,0)) AS avg_golds,
+    COUNT(event) AS total_events, 
+    SUM(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events DESC, athlete_id;
+
+        
+SELECT SUM(gold_medals) AS gold_medals
+FROM
+	(SELECT 
+     	w.country_id, 
+     	SUM(gold) AS gold_medals, 
+     	AVG(gdp) AS avg_gdp
+    FROM winter_games AS w
+    JOIN country_stats AS c
+    -- Update the subquery to join on a second field
+    ON c.country_id = w.country_id AND w.year = CAST(c.year AS date)
+    GROUP BY w.country_id) AS subquery;
+    
+    
+    SELECT 
+	-- Clean the country field to only show country_code
     LEFT(REPLACE(UPPER(TRIM(c.country)), '.', ''), 3) AS country_code,
--- Pull in pop_in_millions and medals_per_million 
+    -- Pull in pop_in_millions and medals_per_million 
 	pop_in_millions,
--- Add the three medal fields using one sum function
+    -- Add the three medal fields using one sum function
 	SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0)) AS medals,
 	SUM(COALESCE(bronze,0) + COALESCE(silver,0) + COALESCE(gold,0)) / CAST(cs.pop_in_millions AS float) AS medals_per_million
 FROM summer_games AS s
